@@ -1,0 +1,204 @@
+---
+title: "Employee Retention"
+author: "Zhongyuan Zhang"
+date: "1/24/2020"
+output: html_document
+---
+
+```{r} 
+library(tidyverse)
+library(rpart)
+library(scales)
+```
+
+```{r}
+df<-read.csv("employee_retention_data.csv",stringsAsFactors = FALSE, header = TRUE)
+str(df)
+```
+```{r}
+#adjust the date data into appropriate one
+df$join_date<-as.Date(df$join_date)
+df$quit_date<-as.Date(df$quit_date)
+
+summary(df)
+
+#Is there any outlier? max in seniority:99?
+```
+```{r}
+ggplot(df,aes(x=seniority))+
+  geom_histogram()
+ 
+ggplot(df,aes(x=seniority))+
+  geom_histogram(aes(fill=as.factor(company_id)),alpha=0.5)
+
+#find out the outlier
+filter(df,seniority>40)
+
+
+```
+
+```{r}
+df%>%
+  group_by(company_id)%>%
+  summarise(count=n())
+```
+```{r}
+unique_dates<-seq(as.Date("2011-01-24"),as.Date("2015-12-13"),by="day")
+# create list of unique dates for the table
+
+unique_companies<-unique(df$company_id)
+#create list of unique companies
+
+data_headcount<-merge(unique_dates,unique_companies,by=NULL)
+#cross join so i get all combinations of dates and companies
+
+colnames(data_headcount)<-c("date","company_id")
+
+#now i get for each day/company, how many people quit/got hired on that day
+data_join<-df%>%
+  group_by(join_date,company_id)%>%
+  summarise(join_count=n())
+
+data_quit<-df%>%
+  group_by(quit_date,company_id)%>%
+  summarise(quit_count=n())
+
+#Now I left outer join with data_headcount
+#NA means no people were hired /quit on that day cause there's no match; two ways to do this with different function
+
+data_headcount1<-merge(data_headcount,data_join,
+                       by.x=c("date","company_id"),
+                       by.y=c("join_date","company_id"),
+                       all.x=TRUE)
+
+
+data_headcount1<-merge(data_headcount1,data_quit,
+                       by.x=c("date","company_id"),
+                       by.y=c("quit_date","company_id"),
+                       all.x=TRUE)
+
+data_headcount2<-left_join(data_headcount,data_join,by=c("date"="join_date","company_id"))
+data_headcount2<-left_join(data_headcount2,data_quit,by=c("date"="quit_date","company_id"))
+
+#repalce the NAs with 0
+data_headcount1$join_count[is.na(data_headcount1$join_count)]<-0
+data_headcount1$quit_count[is.na(data_headcount1$quit_count)]<-0
+
+#Now i need the sum by company_id. Data set is alreadt ordered by date,
+# so i can simply use dplyr to group by company_id and do cumsum
+
+data_headcount1<-data_headcount1%>%
+  group_by(company_id)%>%
+  mutate(join_cumsum=cumsum(join_count),
+         quit_cumsum=cumsum(quit_count))
+
+#finally for each data i just take join_count - quit_count and i am done data_headcount$
+data_headcount1$count<-data_headcount1$join_cumsum-data_headcount1$quit_cumsum
+
+data_headcount_table<-data.frame(data_headcount1[,c("date","company_id","count")])
+
+```
+
+```{r}
+#another way to calculate in a for loop (super slow)
+
+loop_cumsum<-c()
+loop_date<-c()
+loop_company<-c()
+
+for (i in seq(as.Date("2011-01-24"),as.Date("2015-12-13"),by="day")) {
+  #loop through all days
+  for (j in unique(df$company_id)) {
+    #loop through all companies
+    tmp_join<-nrow(subset(df,join_date<= i & company_id==j)) # count joins until that day
+    tmp_quit<-nrow(subset(df,quit_date<=i & company_id==j))  # count quits until that day
+    loop_cumsum<-c(loop_cumsum,tmp_join-tmp_quit)
+    loop_date<-c(loop_date,i)
+    loop_company<-c(loop_date,j)
+  }
+  data_headcount_table_loop<-data.frame(date=as.Date(loop_date,origin='1970-01-01'),
+                                        company_id=loop_company,
+                                        count=loop_cumsum)
+}
+
+```
+
+## What are the main factors that drive employee churn? Do they make sense? Explain your findings.
+
+```{r}
+# How many days was she emplyed? This should be matter.
+# People might get bored in the same place for too long
+# Some hunthead offered better offer with regards to salary
+
+df$tenue<-as.numeric(df$quit_date-df$join_date)
+
+# In general, whenever you have a date, extract week of the year, and day of the week. They tend to give an idea of seasonality and weekly trends.
+# In this case,weekly trends probably don't matter. So let's just get week of the year
+
+df$week_of_year<-as.numeric(format(df$quit_date,"%U"))  #%G --year
+```
+
+```{r}
+#let's plot the tenue in days
+hist(df$tenue,breaks=100)
+
+ggplot(df,aes(x=tenue,fill=dept))+
+  geom_histogram()+
+  facet_wrap(~dept)
+
+#let's plot week of the year
+hist(df$week_of_year,breaks=length(unique(df$week_of_year)))
+```
+1. There are peaks around each employee year anniversity, 1st 2nd
+2. According to the quit_week_of_the_year, it also peaks around the new year. Make sense, companies have so much more moneny to hire at the beginning of the year.
+
+Now let's see if we find the characteristics of the people who quit early. Looking at the histogram of employment_length, it looks like we could define early quitters as those people who quit within 1 year or so.
+So let's create two classes of users: quit within 13 months or not (if they haven't been in the current company for at least 13 months, we remove them)
+
+```{r}
+#create a binary class, remove those who haven't been in the company for more than 13 months
+data<-subset(df,df$join_date< as.Date("2015-12-13")-(365+31))# only keep people who had enough time to age
+
+data$early_quitter<-as.factor(ifelse(is.na(data$quit_date)|as.numeric(data$quit_date-data$join_date)> 396,0,1))
+
+```
+
+Let's now build a model. Here we can just care about：seniority,salary,department and company. A simple decison tree is probably more than enough
+
+```{r}
+library(rpart.plot)
+tree<-rpart(early_quitter~., data[,c("company_id","dept","seniority","early_quitter","salary")],
+            control = rpart.control(minbucket = 30,maxdepth = 3, cp=0.000001),
+            parms=list(prior=c(0.5,0.5)))
+
+# we are not too interested in predictive power,we are mainly using the tree as a descriptive stat tool
+rpart.plot(tree)
+plotcp(tree)
+
+summary(tree)
+```
+1. Variable importance: salary plays the largest role; After all it probably has within it information about the other variables too. That is seniority, department and company impact salary. So salary carries pretty much all the information available.
+
+2. According to the rpart.plot, if salary below 62500 or above 2245000, the employee has lower possibility of being an early quitter, otherwise, she doesn't. THat means people who make a lot of money or very little are not likely to quit. (based on Sillicon Valley standards)
+ 
+3.Looking at the terminal nodes, the way the tree split is : if if salary between 62500 and 2245000, the employee has higher probability of being early quitter. Namely,  people who make a lot of money or very little are not likely to quit. (based on Sillicon Valley standards)
+
+```{r}
+#By plotting the proportion of early quitter by salary percentile, this becomes quite clear:
+data$salary_percentile<-cut(data$salary, breaks= quantile(data$salary,probs=seq(0,1,0.02)), include.lowest = TRUE, labels=1:50)
+
+data_proportion_by_percentitle <- data %>%
+  group_by(salary_percentile)%>%
+  summarize(proportion_early_quitters=length((early_quitter[early_quitter==1])/length(early_quitter)))
+ 
+y_quitter[early_quitter==1]/length(early_quitter) 
+
+```
+
+###Conclusions
+
+1. Given how important is salary, i would definitely love to have as a variable the salary the employee who quit was offered in the next job. Otherwise, things like : promotion or raises received during the employee tenure would be interesting.
+
+2. The major findings are that employees quit at year anniversaries or at the beginning of the year. Both cases make sense. Even if you don't like your current job, you often stay for 1 year before quitting and you often get stocke=s after 1 year so it makes sense to wait. Besides, the beginning of the year is well known to be the best time to change job: companies are hiring more and you often want to stay until end of Dec to get the annual bonus
+
+3. Employees with low and high salaries are less likely to quit. Probably because employees with high salaries are satisfied with current status and those with low salaries are not marketable, so they are inclined to be more stable rather than switching job.
