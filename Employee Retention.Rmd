@@ -31,13 +31,14 @@ ggplot(df,aes(x=seniority))+
 ggplot(df,aes(x=seniority))+
   geom_histogram(aes(fill=as.factor(company_id)),alpha=0.5)
 
-#find out the outlier
+#check out the outliers
 filter(df,seniority>40)
 
 
 ```
 
 ```{r}
+#Count the record cases by Company
 df%>%
   group_by(company_id)%>%
   summarise(count=n())
@@ -54,7 +55,7 @@ data_headcount<-merge(unique_dates,unique_companies,by=NULL)
 
 colnames(data_headcount)<-c("date","company_id")
 
-#now i get for each day/company, how many people quit/got hired on that day
+#now for each day/company, how many people quit/got hired on that day
 data_join<-df%>%
   group_by(join_date,company_id)%>%
   summarise(join_count=n())
@@ -62,7 +63,7 @@ data_join<-df%>%
 data_quit<-df%>%
   group_by(quit_date,company_id)%>%
   summarise(quit_count=n())
-
+ 
 #Now I left outer join with data_headcount
 #NA means no people were hired /quit on that day cause there's no match; two ways to do this with different function
 
