@@ -18,6 +18,6 @@ Estimate employee headcount, for each company, on each day, from 2011/01/24 to 2
 I have created a table with 3 columns: day, employee_headcount, company_id.
 
 # Research Questions 
-What are the main factors that drive employee churn? 
-Do they make sense? Explain your findings.
+What are the main factors that drive employee churn? <br>
+Do they make sense? Explain your findings.<br>
 If you could add to this data set just one variable that could help explain employee churn, what would that be?
