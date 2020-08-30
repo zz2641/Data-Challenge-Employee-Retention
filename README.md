@@ -13,7 +13,7 @@ I got employee data from a few companies. I have data about all employees who jo
 
 As said above, the goal is to predict employee retention and understand its main drivers. Specifically, I have to :
 Assume, for each company, that the headcount starts from zero on 2011/01/23.<br> 
-Estimate employee headcount, for each company, on each day, from 2011/01/24 to 2015/12/13. That is, if by 2012/03/02 2000 people have joined company 1 and 1000 of them have already quit, then company headcount on 2012/03/02 for company 1 would be 1000. 
+Estimate employee headcount, for each company, on each day, from 2011/01/24 to 2015/12/13. `That is, if by 2012/03/02 2000 people have joined company 1 and 1000 of them have already quit, then company headcount on 2012/03/02 for company 1 would be 1000. `
 
 I have created a table with 3 columns: day, employee_headcount, company_id.
 
