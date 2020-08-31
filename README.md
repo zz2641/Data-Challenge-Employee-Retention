@@ -21,3 +21,11 @@ I have created a table with 3 columns: day, employee_headcount, company_id.
 What are the main factors that drive employee churn? <br>
 Do they make sense? Explain your findings.<br>
 If you could add to this data set just one variable that could help explain employee churn, what would that be?
+
+# Conclusions
+
+1. Given how important is salary, i would definitely love to have as a variable the salary the employee who quit was offered in the next job. Otherwise, things like : promotion or raises received during the employee tenure would be interesting.
+
+2. The major findings are that employees quit at year anniversaries or at the beginning of the year. Both cases make sense. Even if you don't like your current job, you often stay for 1 year before quitting or you often get stocks after 1 year so it makes sense to wait. Besides, the beginning of the year is well known to be the best time to change job: companies are hiring more and you often want to stay until end of Dec to get the annual bonus
+
+3. Employees with low and high salaries are less likely to quit. Probably because employees with high salaries are satisfied with current status and those with low salaries are less marketable, so they would rather be more stable.
