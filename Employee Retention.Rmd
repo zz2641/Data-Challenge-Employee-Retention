@@ -199,7 +199,7 @@ summary(tree)
 ```
 1. Variable importance: salary plays the largest role; After all it probably has within it information about the other variables too. That is, seniority, department and company impact salary. So salary carries pretty much all the information available.
 
-2. According to the rpart.plot, if salary falls below 62500 or above 2245000, the employee has lower possibility of being an early quitter, otherwise, he/she doesn't. That means people who make a lot of money or very little are not likely to quit. (based on Silicon Valley standards)
+2. According to the rpart.plot, if salary falls below 62500 or above 224500, the employee has lower possibility of being an early quitter, otherwise, he/she doesn't. That means people who make a lot of money or very little are not likely to quit. (based on Silicon Valley standards)
  
 ```{r}
 #By plotting the proportion of early quitter by salary percentile, this becomes quite clear:
