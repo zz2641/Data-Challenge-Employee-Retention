@@ -1,6 +1,8 @@
 # Data-Challenge-Employee-Retention
 People analytics
 
+<img src="https://www.millinerandassoc.com/wp-content/uploads/2018/01/employee-retention-strategies.png" width="600"><br>
+
 # Goal
 Employee turn-over is a very costly problem for companies. The cost of replacing an employee if often larger than 100K USD, taking into account the time spent to interview and find a replacement, placement fees, sign-on bonuses and the loss of productivity for several months.
 
