@@ -21,8 +21,8 @@ I have created a table with 3 columns: day, employee_headcount, company_id.
 
 # Research Questions 
 What are the main factors that drive employee churn? <br>
-Do they make sense? Explain your findings.<br>
-If you could add to this data set just one variable that could help explain employee churn, what would that be?
+Do they make sense? Explain the findings.<br>
+If I could add to this data set just one variable that could help explain employee churn, what would that be?
 
 # Conclusions
 
